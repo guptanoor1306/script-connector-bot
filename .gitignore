@@ -48,3 +48,9 @@ Thumbs.db
 
 # Vercel
 .vercel
+
+# Large files
+*.pdf
+*.mp4
+*.mov
+*.avi
