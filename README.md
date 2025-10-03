@@ -1,6 +1,6 @@
 # Script Connector Bot
 
-A smart tool that analyzes video scripts to identify missing connectors and suggests contextual improvements.
+An AI-powered tool that analyzes video scripts to identify missing connectors and suggests contextual improvements.
 
 ## Features
 
