@@ -526,28 +526,29 @@ class ScriptConnectorBot:
                 after_content = self._extract_section_content(script_text, section_after)
                 
                 prompt = f"""
-                Analyze these two script sections and create 3 compelling connector sentences that would bridge them effectively.
+                You are a YouTube script writer expert at creating engaging connectors between video sections.
                 
-                Section {section_before.number} ({section_before.title}):
-                {before_content}
+                Analyze these two script sections:
                 
-                Section {section_after.number} ({section_after.title}):
-                {after_content}
+                SECTION {section_before.number}: {section_before.title}
+                Content: {before_content}
                 
-                Intro context: {intro[:300] if intro else "No intro provided"}
-                Payoff context: {payoff[:300] if payoff else "No payoff provided"}
+                SECTION {section_after.number}: {section_after.title}
+                Content: {after_content}
                 
-                Create 3 different connector sentences that:
-                1. Create curiosity and suspense
-                2. Link back to the intro story if possible (use specific elements from the intro)
-                3. Build anticipation for the payoff
-                4. Use direct audience engagement
-                5. Include transition words
-                6. Are specific to the content being discussed
-                7. Reference specific details from the sections
+                VIDEO INTRO: {intro[:400] if intro else "Not provided"}
+                VIDEO PAYOFF: {payoff[:400] if payoff else "Not provided"}
                 
-                Return only the 3 connector sentences, one per line, without numbering or explanations.
-                Make them specific to the actual content, not generic.
+                Create 3 SPECIFIC connector sentences that:
+                - Reference ACTUAL DETAILS from Section {section_before.number} (use specific names, numbers, or facts mentioned)
+                - Build curiosity about Section {section_after.number} using its ACTUAL CONTENT
+                - Link back to the intro story/hook if relevant
+                - Create suspense that makes viewers want to keep watching
+                - Sound natural and conversational
+                - Are NOT generic (avoid "most important part", "here's the thing", etc.)
+                
+                Return ONLY the 3 connector sentences, one per line, no numbering, no explanations.
+                Each connector must reference specific content from the sections.
                 """
                 
                 response = self.openai_client.chat.completions.create(
@@ -578,10 +579,10 @@ class ScriptConnectorBot:
         """Extract content around a section for AI analysis"""
         lines = script_text.split('\n')
         start_idx = max(0, section.start_line - 2)
-        end_idx = min(len(lines), section.end_line + 2)
+        end_idx = min(len(lines), section.end_line + 20)  # Get more context
         
         content = '\n'.join(lines[start_idx:end_idx])
-        return content[:500]  # Limit content length
+        return content[:800]  # Increased for better context and specificity
     
     def _create_fallback_connectors(self, section_before: ScriptSection, section_after: ScriptSection, intro: str, payoff: str) -> List[str]:
         """Create fallback connector suggestions when AI is not available"""
