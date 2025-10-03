@@ -1,0 +1,1593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Script Connector Bot - Zero1 by Zerodha</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            font-weight: 300;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .main-content {
+            padding: 40px;
+        }
+
+        .content-layout {
+            display: flex;
+            gap: 30px;
+            min-height: 80vh;
+        }
+
+        .left-panel {
+            flex: 1;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .right-panel {
+            flex: 1;
+            background: white;
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            overflow-y: auto;
+            max-height: 80vh;
+        }
+
+        .script-viewer {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            font-family: 'Roboto', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            border: 1px solid #dee2e6;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+
+        .script-line {
+            padding: 5px 10px;
+            margin: 2px 0;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .script-line:hover {
+            background: #e3f2fd;
+        }
+
+        .script-line.connector {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+            font-weight: 500;
+        }
+
+        .script-line.section {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            font-weight: 600;
+        }
+
+        .script-line.intro {
+            background: #d1ecf1;
+            border-left: 4px solid #17a2b8;
+            font-weight: 500;
+        }
+
+        .script-line.payoff {
+            background: #f8d7da;
+            border-left: 4px solid #dc3545;
+            font-weight: 500;
+        }
+
+        .script-line.suggestion {
+            background: #e8f5e8;
+            border-left: 4px solid #28a745;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .script-line.suggestion:hover {
+            background: #d4edda;
+        }
+
+        .script-line.suggestion::before {
+            content: "💡";
+            margin-right: 8px;
+        }
+
+        .suggestion-popup {
+            position: absolute;
+            background: white;
+            border: 2px solid #28a745;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1000;
+            max-width: 300px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .suggestion-popup::before {
+            content: "";
+            position: absolute;
+            top: -8px;
+            left: 20px;
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid #28a745;
+        }
+
+        .suggestion-text {
+            font-weight: 500;
+            color: #155724;
+            margin-bottom: 8px;
+        }
+
+        .suggestion-placement {
+            font-size: 12px;
+            color: #666;
+            font-style: italic;
+        }
+
+        .section-analysis {
+            margin-top: 30px;
+        }
+
+        .section-analysis-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #667eea;
+        }
+
+        .section-analysis-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1em;
+        }
+
+        .section-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-good {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-needs-improvement {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-missing {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .section-connector-analysis {
+            margin-top: 10px;
+        }
+
+        .connector-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .connector-text {
+            font-style: italic;
+            color: #666;
+            margin-left: 20px;
+        }
+
+        .section-suggestions {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+
+        .section-suggestion {
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .section-suggestion:hover {
+            background: #e9ecef;
+        }
+
+        .script-line.placement-highlight {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            font-weight: 500;
+            position: relative;
+        }
+
+        .script-line.placement-highlight::after {
+            content: "📍";
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .connector-preview {
+            background: white;
+            border: 2px solid #28a745;
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .preview-header {
+            background: #28a745;
+            color: white;
+            padding: 15px;
+            border-radius: 8px 8px 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .preview-header h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 0;
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background 0.2s ease;
+        }
+
+        .close-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+
+        .preview-content {
+            padding: 20px;
+        }
+
+        .preview-content .connector-text {
+            font-size: 16px;
+            font-style: italic;
+            color: #333;
+            margin-bottom: 15px;
+            line-height: 1.5;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+
+        .preview-content .placement-info {
+            font-size: 14px;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .analysis-panel {
+            display: none;
+        }
+
+        .analysis-panel.active {
+            display: block;
+        }
+
+        .connector-details {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .connector-text {
+            font-style: italic;
+            color: #333;
+            margin-bottom: 15px;
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #28a745;
+        }
+
+        .connector-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .status-valid {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-invalid {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .issues-list {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .issue-item {
+            color: #856404;
+            margin-bottom: 5px;
+        }
+
+        .suggestions-box {
+            background: #e8f5e8;
+            border: 1px solid #c3e6cb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .suggestion-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid #28a745;
+            font-style: italic;
+        }
+
+        .ai-suggestions-box {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .ai-suggestion-item {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid #2196f3;
+            font-style: italic;
+        }
+
+        .overview-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-top: 5px;
+        }
+
+        .navigation-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: #f8f9fa;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .nav-tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .nav-tab:hover {
+            background: #e9ecef;
+        }
+
+        .nav-tab.active:hover {
+            background: #5a6fd8;
+        }
+
+        .upload-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 2px dashed #dee2e6;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #667eea;
+            background: #f0f2ff;
+        }
+
+        .upload-section.dragover {
+            border-color: #667eea;
+            background: #e8f0ff;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 25px;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 10px;
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .text-input-section {
+            margin-bottom: 30px;
+        }
+
+        .text-input-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .script-textarea {
+            width: 100%;
+            min-height: 300px;
+            padding: 20px;
+            border: 2px solid #dee2e6;
+            border-radius: 15px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            transition: border-color 0.3s ease;
+            font-weight: 400;
+        }
+
+        .script-textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .intro-input-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        .intro-textarea {
+            width: 100%;
+            min-height: 120px;
+            padding: 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            font-family: 'Roboto', sans-serif;
+            font-size: 14px;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+
+        .analyze-btn {
+            background: linear-gradient(135deg, #ff6b6b, #ee5a24);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 25px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 20px 0;
+        }
+
+        .analyze-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .analyze-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .results-section {
+            margin-top: 40px;
+            display: none;
+        }
+
+        .score-card {
+            background: linear-gradient(135deg, #4facfe, #00f2fe);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-number {
+            font-size: 4em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .score-label {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .sections-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .section-card {
+            background: white;
+            border: 2px solid #dee2e6;
+            border-radius: 15px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        .section-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .section-title {
+            color: #333;
+            font-size: 1.2em;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .section-content {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+
+        .connectors-section {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .connector-item {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-left: 5px solid #28a745;
+        }
+
+        .connector-item.invalid {
+            border-left-color: #dc3545;
+        }
+
+        .connector-text {
+            font-style: italic;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .connector-issues {
+            color: #dc3545;
+            font-size: 0.9em;
+        }
+
+        .missing-connectors {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .missing-connector-item {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #ffc107;
+        }
+
+        .suggestions-section {
+            background: #e8f5e8;
+            border-radius: 15px;
+            padding: 30px;
+        }
+
+        .suggestion-item {
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid #28a745;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #f5c6cb;
+        }
+
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid #c3e6cb;
+        }
+
+        .api-key-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .api-key-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        .suggest-connector-btn {
+            background: #17a2b8;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 15px;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .suggest-connector-btn:hover {
+            background: #138496;
+        }
+
+        .ai-suggestions {
+            background: #e3f2fd;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .ai-suggestion {
+            background: white;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 8px;
+            border-left: 3px solid #2196f3;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎬 Script Connector Bot</h1>
+            <p>Analyze your video scripts and ensure compelling connectors that retain viewers</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Upload Section -->
+            <div class="upload-section" id="uploadSection">
+                <h3>📄 Upload Script PDF</h3>
+                <p>Drag and drop your script PDF here or click to browse</p>
+                <input type="file" id="fileInput" class="file-input" accept=".pdf">
+                <button onclick="document.getElementById('fileInput').click()" class="upload-btn">
+                    Choose PDF File
+                </button>
+            </div>
+
+                <!-- Text Input Section -->
+                <div class="text-input-section">
+                    <h3>📝 Or Paste Script Text</h3>
+                    <textarea id="scriptText" class="script-textarea" placeholder="Paste your script text here..."></textarea>
+                </div>
+
+                <!-- Intro Input Section -->
+                <div class="intro-input-section">
+                    <h3>🎬 Script Intro (Optional)</h3>
+                    <p>Add your script's opening hook or intro story to get better connector suggestions</p>
+                    <textarea id="scriptIntro" class="intro-textarea" placeholder="Paste your script intro/hook here..."></textarea>
+                </div>
+
+
+            <button onclick="analyzeScript()" class="analyze-btn" id="analyzeBtn">
+                🔍 Analyze Script
+            </button>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Analyzing your script...</p>
+            </div>
+
+            <!-- Results Section -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <!-- Score Card -->
+                <div class="score-card">
+                    <div class="score-number" id="scoreNumber">0</div>
+                    <div class="score-label">Connector Quality Score</div>
+                </div>
+
+                <!-- Content Layout -->
+                <div class="content-layout">
+                    <!-- Left Panel: Script Viewer -->
+                    <div class="left-panel">
+                        <h3>📄 Script Viewer</h3>
+                        <div class="script-viewer" id="scriptViewer">
+                            <p style="text-align: center; color: #666; padding: 40px;">
+                                Script will appear here after analysis
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel: Analysis -->
+                    <div class="right-panel">
+                        <!-- Navigation Tabs -->
+                        <div class="navigation-tabs">
+                            <button class="nav-tab active" onclick="showTab('overview')">Overview</button>
+                            <button class="nav-tab" onclick="showTab('connectors')">Connectors</button>
+                            <button class="nav-tab" onclick="showTab('sections')">Sections</button>
+                        </div>
+
+                        <!-- Overview Tab -->
+                        <div id="overviewTab" class="analysis-panel active">
+                            <!-- Stats -->
+                            <div class="overview-stats">
+                                <div class="stat-card">
+                                    <div class="stat-number" id="sectionsCount">0</div>
+                                    <div class="stat-label">Sections</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number" id="connectorsCount">0</div>
+                                    <div class="stat-label">Connectors</div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-number" id="missingCount">0</div>
+                                    <div class="stat-label">Missing</div>
+                                </div>
+                            </div>
+
+                            <!-- Section-by-Section Analysis -->
+                            <div class="section-analysis">
+                                <h4>📋 Section-by-Section Analysis</h4>
+                                <div id="sectionAnalysis">
+                                    <!-- Section analysis will be populated here -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Connectors Tab -->
+                        <div id="connectorsTab" class="analysis-panel">
+                            <h3>🔗 Connector Analysis</h3>
+                            <div id="connectorsList">
+                                <!-- Connectors will be populated here -->
+                            </div>
+                        </div>
+
+                        <!-- Sections Tab -->
+                        <div id="sectionsTab" class="analysis-panel">
+                            <h3>📋 Section Analysis</h3>
+                            <div id="sectionsList">
+                                <!-- Sections will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentAnalysis = null;
+
+
+        // File upload handling
+        document.getElementById('fileInput').addEventListener('change', handleFileUpload);
+        
+        const uploadSection = document.getElementById('uploadSection');
+        
+        uploadSection.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadSection.classList.add('dragover');
+        });
+        
+        uploadSection.addEventListener('dragleave', () => {
+            uploadSection.classList.remove('dragover');
+        });
+        
+        uploadSection.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadSection.classList.remove('dragover');
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileUpload({ target: { files: files } });
+            }
+        });
+
+        function handleFileUpload(event) {
+            const file = event.target.files[0];
+            if (file && file.type === 'application/pdf') {
+                // Check file size (limit to 4MB for Vercel)
+                if (file.size > 4 * 1024 * 1024) {
+                    showMessage('File too large. Please use a PDF smaller than 4MB.', 'error');
+                    return;
+                }
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                showLoading(true);
+                
+                fetch('/upload_pdf', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 413) {
+                            throw new Error('File too large. Please use a smaller PDF.');
+                        }
+                        throw new Error('Upload failed');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        showMessage(data.error, 'error');
+                    } else {
+                        document.getElementById('scriptText').value = data.script_text;
+                        showMessage('PDF uploaded and text extracted successfully!', 'success');
+                    }
+                })
+                .catch(error => {
+                    showMessage(error.message || 'Error uploading file: ' + error.message, 'error');
+                })
+                .finally(() => {
+                    showLoading(false);
+                });
+            } else {
+                showMessage('Please select a valid PDF file.', 'error');
+            }
+        }
+
+        function analyzeScript() {
+            const scriptText = document.getElementById('scriptText').value.trim();
+            const scriptIntro = document.getElementById('scriptIntro').value.trim();
+            
+            if (!scriptText) {
+                showMessage('Please enter script text or upload a PDF file.', 'error');
+                return;
+            }
+
+            showLoading(true);
+            document.getElementById('analyzeBtn').disabled = true;
+
+            fetch('/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    script_text: scriptText,
+                    script_intro: scriptIntro
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    showMessage(data.error, 'error');
+                } else {
+                    currentAnalysis = data;
+                    displayResults(data);
+                    showMessage('Script analyzed successfully!', 'success');
+                }
+            })
+            .catch(error => {
+                showMessage('Error analyzing script: ' + error.message, 'error');
+            })
+            .finally(() => {
+                showLoading(false);
+                document.getElementById('analyzeBtn').disabled = false;
+            });
+        }
+
+        function displayResults(data) {
+            currentAnalysis = data;
+            
+            // Update score and stats
+            document.getElementById('scoreNumber').textContent = Math.round(data.score);
+            document.getElementById('sectionsCount').textContent = data.sections.length;
+            document.getElementById('connectorsCount').textContent = data.connectors.length;
+            document.getElementById('missingCount').textContent = data.missing_connectors.length;
+            
+            // Display script in left panel with highlighting
+            displayScriptWithHighlighting(data);
+            
+            // Display connectors in connectors tab
+            displayConnectors(data);
+            
+            // Display sections in sections tab
+            displaySections(data);
+            
+            // Display section-by-section analysis in overview
+            displaySectionAnalysis(data);
+            
+            // Show results section
+            document.getElementById('resultsSection').style.display = 'block';
+        }
+
+        function displayScriptWithHighlighting(data) {
+            const scriptViewer = document.getElementById('scriptViewer');
+            const scriptText = document.getElementById('scriptText').value;
+            
+            if (!scriptText) {
+                scriptViewer.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">No script text available</p>';
+                return;
+            }
+            
+            // Use intelligent text segmentation
+            const segments = segmentTextIntelligently(scriptText);
+            let html = '';
+            
+            segments.forEach((segment, index) => {
+                const segmentNumber = index + 1;
+                let className = 'script-line';
+                let clickHandler = '';
+                
+                // Check if this segment contains a connector
+                const connector = data.connectors.find(c => 
+                    scriptText.indexOf(c.text) >= 0 && 
+                    (segment.includes(c.text.substring(0, 30)) || c.text.includes(segment.substring(0, 30)))
+                );
+                if (connector) {
+                    className += ' connector';
+                    clickHandler = `onclick="showConnectorDetails(${data.connectors.indexOf(connector)})"`;
+                }
+                
+                // Check if this segment contains a section
+                const section = data.sections.find(s => 
+                    segment.toLowerCase().includes('section') || 
+                    segment.toLowerCase().includes(s.title.toLowerCase())
+                );
+                if (section) {
+                    className += ' section';
+                    clickHandler = `onclick="showSectionDetails(${data.sections.indexOf(section)})"`;
+                }
+                
+                // Check if this segment is part of intro
+                if (segment.toLowerCase().includes('intro') && segmentNumber < 10) {
+                    className += ' intro';
+                }
+                
+                // Check if this segment is part of payoff
+                if (segment.toLowerCase().includes('payoff') || segment.toLowerCase().includes('conclusion')) {
+                    className += ' payoff';
+                }
+                
+                html += `<div class="${className}" ${clickHandler}>${segmentNumber}: ${segment}</div>`;
+            });
+            
+            scriptViewer.innerHTML = html;
+        }
+
+        function segmentTextIntelligently(text) {
+            // Simple sentence segmentation - can be enhanced with AI
+            const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+            const segments = [];
+            
+            for (let sentence of sentences) {
+                sentence = sentence.trim();
+                if (sentence.length > 0) {
+                    // Add proper punctuation back
+                    if (!sentence.match(/[.!?]$/)) {
+                        sentence += '.';
+                    }
+                    segments.push(sentence);
+                }
+            }
+            
+            return segments;
+        }
+
+        function segmentTextWithAI(text) {
+            const apiKey = localStorage.getItem('openai_api_key');
+            if (!apiKey) {
+                return segmentTextIntelligently(text);
+            }
+            
+            return fetch('/segment_text', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    text: text,
+                    api_key: apiKey
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('AI segmentation failed:', data.error);
+                    return segmentTextIntelligently(text);
+                }
+                return data.segments;
+            })
+            .catch(error => {
+                console.error('AI segmentation error:', error);
+                return segmentTextIntelligently(text);
+            });
+        }
+
+        function displayConnectors(data) {
+            const connectorsList = document.getElementById('connectorsList');
+            connectorsList.innerHTML = '';
+            
+            if (data.connectors.length === 0) {
+                connectorsList.innerHTML = '<p>No connectors found in the script.</p>';
+                return;
+            }
+            
+            data.connectors.forEach((connector, index) => {
+                const connectorItem = document.createElement('div');
+                connectorItem.className = 'connector-details';
+                connectorItem.innerHTML = `
+                    <div class="connector-text">"${connector.text}"</div>
+                    <div class="connector-status">
+                        <span class="status-badge ${connector.is_valid ? 'status-valid' : 'status-invalid'}">
+                            ${connector.is_valid ? '✓ Valid' : '✗ Invalid'}
+                        </span>
+                        <span>Type: ${connector.type} | Line: ${connector.line_number}</span>
+                    </div>
+                    ${connector.issues.length > 0 ? `
+                        <div class="issues-list">
+                            <h5>Issues:</h5>
+                            ${connector.issues.map(issue => `<div class="issue-item">• ${issue}</div>`).join('')}
+                        </div>
+                    ` : ''}
+                    <button class="suggest-connector-btn" onclick="getAISuggestions(${index})">
+                        Get AI Suggestions
+                    </button>
+                    <div class="ai-suggestions-box" id="ai-suggestions-${index}" style="display: none;">
+                        <h5>AI Suggestions:</h5>
+                        <div id="ai-suggestions-content-${index}"></div>
+                    </div>
+                `;
+                connectorsList.appendChild(connectorItem);
+            });
+        }
+
+        function displaySections(data) {
+            const sectionsList = document.getElementById('sectionsList');
+            sectionsList.innerHTML = '';
+            
+            data.sections.forEach((section, index) => {
+                const sectionItem = document.createElement('div');
+                sectionItem.className = 'section-card';
+                sectionItem.innerHTML = `
+                    <div class="section-title">Section ${section.number}: ${section.title}</div>
+                    <div class="section-content">${section.content}</div>
+                    <div style="margin-top: 10px; font-size: 0.9em; color: #666;">
+                        Lines ${section.start_line} - ${section.end_line}
+                    </div>
+                `;
+                sectionsList.appendChild(sectionItem);
+            });
+        }
+
+        function displaySectionAnalysis(data) {
+            const sectionAnalysis = document.getElementById('sectionAnalysis');
+            sectionAnalysis.innerHTML = '';
+            
+            // Analyze each section transition
+            for (let i = 0; i < data.sections.length - 1; i++) {
+                const currentSection = data.sections[i];
+                const nextSection = data.sections[i + 1];
+                
+                // Find connector between these sections
+                const connector = data.connectors.find(c => 
+                    c.section_before === currentSection.number && c.section_after === nextSection.number
+                );
+                
+                // Create section analysis item
+                const analysisItem = document.createElement('div');
+                analysisItem.className = 'section-analysis-item';
+                
+                let status, statusClass, connectorHtml, suggestionsHtml;
+                
+                if (connector) {
+                    if (connector.is_valid) {
+                        status = '✓ Good Connector';
+                        statusClass = 'status-good';
+                    } else {
+                        status = '⚠ Needs Improvement';
+                        statusClass = 'status-needs-improvement';
+                    }
+                    
+                    connectorHtml = `
+                        <div class="connector-status">
+                            <span>Connector found:</span>
+                            <div class="connector-text">"${connector.text}"</div>
+                        </div>
+                    `;
+                    
+                    // Get suggestions for this connector
+                    const connectorSuggestions = data.suggestions.filter(s => 
+                        s.includes(`Line ${connector.line_number}`) || s.includes(`line ${connector.line_number}`)
+                    );
+                    
+                    suggestionsHtml = connectorSuggestions.map(suggestion => 
+                        `<div class="section-suggestion" onclick="showSuggestionInScript('${suggestion}', 0)">${suggestion}</div>`
+                    ).join('');
+                    
+                } else {
+                    status = '❌ Missing Connector';
+                    statusClass = 'status-missing';
+                    
+                    connectorHtml = '<div class="connector-status">No connector found between these sections</div>';
+                    
+                    // Get suggestions for missing connector
+                    const missingSuggestions = data.suggestions.filter(s => 
+                        s.includes(`Section ${currentSection.number} and ${nextSection.number}`) ||
+                        s.includes(`Section ${currentSection.number} and ${nextSection.number}`)
+                    );
+                    
+                    if (missingSuggestions.length === 0) {
+                        // Generate fallback suggestions if none found
+                        const fallbackSuggestions = [
+                            `Connector between Section ${currentSection.number} and ${nextSection.number}: "But here's what most people don't realize about ${nextSection.title.toLowerCase()}..." (Place after line ${currentSection.end_line})`,
+                            `Connector between Section ${currentSection.number} and ${nextSection.number}: "Now, let's look at what's actually happening with ${nextSection.title.toLowerCase()}..." (Place after line ${currentSection.end_line})`,
+                            `Connector between Section ${currentSection.number} and ${nextSection.number}: "This leads us to the most important part - ${nextSection.title.toLowerCase()}..." (Place after line ${currentSection.end_line})`
+                        ];
+                        suggestionsHtml = fallbackSuggestions.map(suggestion => 
+                            `<div class="section-suggestion" onclick="showSuggestionInScript('${suggestion}', 0)">${suggestion}</div>`
+                        ).join('');
+                    } else {
+                        suggestionsHtml = missingSuggestions.map(suggestion => 
+                            `<div class="section-suggestion" onclick="showSuggestionInScript('${suggestion}', 0)">${suggestion}</div>`
+                        ).join('');
+                    }
+                }
+                
+                analysisItem.innerHTML = `
+                    <div class="section-analysis-header">
+                        <div class="section-title">Section ${currentSection.number} → Section ${nextSection.number}</div>
+                        <div class="section-status ${statusClass}">${status}</div>
+                    </div>
+                    <div class="section-connector-analysis">
+                        ${connectorHtml}
+                    </div>
+                    <div class="section-suggestions">
+                        <strong>Suggestions:</strong>
+                        ${suggestionsHtml}
+                    </div>
+                `;
+                
+                sectionAnalysis.appendChild(analysisItem);
+            }
+        }
+
+        function showSuggestionInScript(suggestion, index) {
+            // Parse the suggestion to extract connector text and placement info
+            const match = suggestion.match(/Connector between Section \d+ and \d+: "([^"]+)" \(Place after line (\d+)\)/);
+            if (match) {
+                const connectorText = match[1];
+                const placementLine = parseInt(match[2]);
+                
+                // Clear previous highlights
+                clearPlacementHighlights();
+                
+                // Highlight the placement area in the script
+                highlightSuggestionPlacement(connectorText, placementLine);
+                
+                // Show the connector text in a prominent way
+                showConnectorPreview(connectorText, placementLine);
+            }
+        }
+
+        function showConnectorPreview(connectorText, placementLine) {
+            // Remove existing previews
+            document.querySelectorAll('.connector-preview').forEach(preview => preview.remove());
+            
+            // Create preview element
+            const preview = document.createElement('div');
+            preview.className = 'connector-preview';
+            preview.innerHTML = `
+                <div class="preview-header">
+                    <h4>💡 Suggested Connector</h4>
+                    <button onclick="this.parentElement.parentElement.remove()" class="close-btn">×</button>
+                </div>
+                <div class="preview-content">
+                    <div class="connector-text">"${connectorText}"</div>
+                    <div class="placement-info">Place after line ${placementLine}</div>
+                </div>
+            `;
+            
+            // Position the preview
+            preview.style.position = 'fixed';
+            preview.style.top = '20px';
+            preview.style.right = '20px';
+            preview.style.zIndex = '1000';
+            preview.style.maxWidth = '400px';
+            
+            document.body.appendChild(preview);
+            
+            // Auto-remove after 10 seconds
+            setTimeout(() => {
+                if (preview.parentNode) {
+                    preview.parentNode.removeChild(preview);
+                }
+            }, 10000);
+        }
+
+        function clearPlacementHighlights() {
+            const scriptViewer = document.getElementById('scriptViewer');
+            const highlightedLines = scriptViewer.querySelectorAll('.placement-highlight');
+            highlightedLines.forEach(line => {
+                line.classList.remove('placement-highlight');
+            });
+        }
+
+        function highlightSuggestionPlacement(connectorText, placementLine) {
+            const scriptViewer = document.getElementById('scriptViewer');
+            const lines = scriptViewer.querySelectorAll('.script-line');
+            
+            // Find the line closest to the placement line
+            let targetLine = null;
+            let minDistance = Infinity;
+            
+            lines.forEach((line, index) => {
+                const lineNumber = parseInt(line.textContent.split(':')[0]);
+                const distance = Math.abs(lineNumber - placementLine);
+                if (distance < minDistance) {
+                    minDistance = distance;
+                    targetLine = line;
+                }
+            });
+            
+            if (targetLine) {
+                // Add placement highlight
+                targetLine.classList.add('placement-highlight');
+                targetLine.setAttribute('data-suggestion', connectorText);
+                targetLine.setAttribute('data-placement', placementLine);
+                
+                // Scroll to the line
+                targetLine.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // Show popup
+                showSuggestionPopup(targetLine, connectorText, placementLine);
+            }
+        }
+
+        function showSuggestionPopup(element, connectorText, placementLine) {
+            // Remove existing popups
+            document.querySelectorAll('.suggestion-popup').forEach(popup => popup.remove());
+            
+            // Create popup
+            const popup = document.createElement('div');
+            popup.className = 'suggestion-popup';
+            popup.innerHTML = `
+                <div class="suggestion-text">${connectorText}</div>
+                <div class="suggestion-placement">Place after line ${placementLine}</div>
+            `;
+            
+            // Position popup
+            const rect = element.getBoundingClientRect();
+            popup.style.position = 'fixed';
+            popup.style.top = (rect.top - 80) + 'px';
+            popup.style.left = (rect.left + 20) + 'px';
+            
+            document.body.appendChild(popup);
+            
+            // Auto-remove after 5 seconds
+            setTimeout(() => {
+                if (popup.parentNode) {
+                    popup.parentNode.removeChild(popup);
+                }
+            }, 5000);
+        }
+
+        function showConnectorDetails(connectorIndex) {
+            // Switch to connectors tab and highlight the specific connector
+            showTab('connectors');
+            // You could add highlighting logic here
+        }
+
+        function showSectionDetails(sectionIndex) {
+            // Switch to sections tab and highlight the specific section
+            showTab('sections');
+            // You could add highlighting logic here
+        }
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.analysis-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            
+            // Remove active class from all nav tabs
+            document.querySelectorAll('.nav-tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            // Show selected tab
+            document.getElementById(tabName + 'Tab').classList.add('active');
+            
+            // Add active class to clicked nav tab
+            event.target.classList.add('active');
+        }
+
+        function getAISuggestions(connectorIndex) {
+            const suggestionsDiv = document.getElementById(`ai-suggestions-${connectorIndex}`);
+            const contentDiv = document.getElementById(`ai-suggestions-content-${connectorIndex}`);
+            
+            if (suggestionsDiv.style.display === 'block') {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+            
+            contentDiv.innerHTML = '<div class="spinner"></div><p>Generating AI suggestions...</p>';
+            suggestionsDiv.style.display = 'block';
+            
+            const connector = currentAnalysis.connectors[connectorIndex];
+            const apiKey = localStorage.getItem('openai_api_key');
+            
+            fetch('/suggest_connector', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    section_before: connector.section_before,
+                    section_after: connector.section_after,
+                    script_text: document.getElementById('scriptText').value,
+                    intro: currentAnalysis.intro,
+                    payoff: currentAnalysis.payoff,
+                    api_key: apiKey
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    contentDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                } else {
+                    contentDiv.innerHTML = '';
+                    data.suggestions.forEach(suggestion => {
+                        const suggestionItem = document.createElement('div');
+                        suggestionItem.className = 'ai-suggestion-item';
+                        suggestionItem.textContent = suggestion;
+                        contentDiv.appendChild(suggestionItem);
+                    });
+                }
+            })
+            .catch(error => {
+                contentDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            });
+        }
+
+        function suggestConnector(sectionBefore, sectionAfter) {
+            const suggestionsDiv = document.getElementById(`suggestions-${sectionBefore}-${sectionAfter}`);
+            
+            if (suggestionsDiv.style.display === 'block') {
+                suggestionsDiv.style.display = 'none';
+                return;
+            }
+
+            suggestionsDiv.innerHTML = '<div class="spinner"></div><p>Generating AI suggestions...</p>';
+            suggestionsDiv.style.display = 'block';
+
+            const apiKey = localStorage.getItem('openai_api_key');
+            
+            fetch('/suggest_connector', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    section_before: sectionBefore,
+                    section_after: sectionAfter,
+                    script_text: document.getElementById('scriptText').value,
+                    intro: currentAnalysis.intro,
+                    payoff: currentAnalysis.payoff,
+                    api_key: apiKey
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    suggestionsDiv.innerHTML = `<div class="error">Error: ${data.error}</div>`;
+                } else {
+                    suggestionsDiv.innerHTML = '';
+                    data.suggestions.forEach(suggestion => {
+                        const suggestionItem = document.createElement('div');
+                        suggestionItem.className = 'ai-suggestion';
+                        suggestionItem.textContent = suggestion;
+                        suggestionsDiv.appendChild(suggestionItem);
+                    });
+                }
+            })
+            .catch(error => {
+                suggestionsDiv.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = type;
+            messageDiv.textContent = message;
+            
+            const mainContent = document.querySelector('.main-content');
+            mainContent.insertBefore(messageDiv, mainContent.firstChild);
+            
+            setTimeout(() => {
+                messageDiv.remove();
+            }, 5000);
+        }
+    </script>
+</body>
+</html>
