@@ -41,9 +41,10 @@ python app.py
 
 1. Upload a PDF script or paste text
 2. Optionally add your script's intro for better suggestions
-3. Add your OpenAI API key for AI-powered analysis
-4. Click "Analyze Script"
-5. Review suggestions and click to see placement in the script
+3. Click "Analyze Script"
+4. Review suggestions and click to see placement in the script
+
+**Note:** OpenAI API key should be set as an environment variable in Vercel for AI-powered suggestions.
 
 ## API Endpoints
 

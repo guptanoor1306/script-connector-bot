@@ -32,12 +32,12 @@ def analyze_script():
         # Get script text and intro from request
         script_text = request.json.get('script_text', '')
         script_intro = request.json.get('script_intro', '')
-        api_key = request.json.get('api_key', '')
         
         if not script_text:
             return jsonify({'error': 'No script text provided'}), 400
         
-        # Initialize bot with API key if provided
+        # Initialize bot with API key from environment
+        api_key = os.getenv('OPENAI_API_KEY')
         if api_key:
             bot_with_ai = ScriptConnectorBot(openai_api_key=api_key)
         else:
