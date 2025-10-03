@@ -520,10 +520,14 @@ class ScriptConnectorBot:
         
         # Use AI to analyze the content and generate contextual connectors
         if self.openai_client:
+            print(f"✓ OpenAI client available, generating AI suggestions...")
             try:
                 # Extract relevant content around the sections
                 before_content = self._extract_section_content(script_text, section_before)
                 after_content = self._extract_section_content(script_text, section_after)
+                
+                print(f"Before content length: {len(before_content)}")
+                print(f"After content length: {len(after_content)}")
                 
                 prompt = f"""
                 You are a YouTube script writer expert at creating engaging connectors between video sections.
@@ -551,6 +555,7 @@ class ScriptConnectorBot:
                 Each connector must reference specific content from the sections.
                 """
                 
+                print(f"Calling OpenAI API...")
                 response = self.openai_client.chat.completions.create(
                     model="gpt-3.5-turbo",
                     messages=[{"role": "user", "content": prompt}],
@@ -558,18 +563,37 @@ class ScriptConnectorBot:
                     temperature=0.7
                 )
                 
-                ai_suggestions = response.choices[0].message.content.strip().split('\n')
+                print(f"✓ OpenAI API response received")
+                ai_response = response.choices[0].message.content.strip()
+                print(f"AI Response: {ai_response[:200]}...")
+                
+                # Parse AI suggestions - they come as plain sentences, one per line
+                ai_suggestions = [s.strip() for s in ai_response.split('\n') if s.strip()]
+                
+                # Remove any numbering (1., 2., 3., etc.)
+                cleaned_suggestions = []
                 for suggestion in ai_suggestions:
-                    if "Connector:" in suggestion:
-                        connector_text = suggestion.replace("Connector:", "").strip()
-                        formatted_suggestion = f"Connector between Section {section_before.number} and {section_after.number}: \"{connector_text}\" (Place after line {section_before.end_line})"
-                        suggestions.append(formatted_suggestion)
+                    # Remove leading numbers, dots, dashes
+                    cleaned = suggestion.lstrip('0123456789.-) ').strip()
+                    if cleaned:
+                        cleaned_suggestions.append(cleaned)
+                
+                print(f"Generated {len(cleaned_suggestions)} AI suggestions")
+                
+                # Format the suggestions
+                for connector_text in cleaned_suggestions[:3]:  # Take only first 3
+                    formatted_suggestion = f"Connector between Section {section_before.number} and {section_after.number}: \"{connector_text}\" (Place after line {section_before.end_line})"
+                    suggestions.append(formatted_suggestion)
+                    print(f"Added suggestion: {formatted_suggestion[:100]}...")
                 
             except Exception as e:
-                print(f"AI connector generation failed: {e}")
+                print(f"❌ AI connector generation failed: {e}")
+                import traceback
+                traceback.print_exc()
                 # Fallback to generic suggestions
                 suggestions.extend(self._create_fallback_connectors(section_before, section_after, intro, payoff))
         else:
+            print(f"❌ OpenAI client not available, using fallback suggestions")
             # Fallback to generic suggestions
             suggestions.extend(self._create_fallback_connectors(section_before, section_after, intro, payoff))
         
