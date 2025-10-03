@@ -968,9 +968,9 @@
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (file && file.type === 'application/pdf') {
-                // Check file size (limit to 4MB for Vercel)
-                if (file.size > 4 * 1024 * 1024) {
-                    showMessage('File too large. Please use a PDF smaller than 4MB.', 'error');
+                // Check file size (limit to 10MB)
+                if (file.size > 10 * 1024 * 1024) {
+                    showMessage('File too large. Please use a PDF smaller than 10MB.', 'error');
                     return;
                 }
                 
@@ -986,7 +986,7 @@
                 .then(response => {
                     if (!response.ok) {
                         if (response.status === 413) {
-                            throw new Error('File too large. Please use a smaller PDF.');
+                            throw new Error('File too large. Vercel has a 4.5MB limit. Please use a smaller PDF or paste the text directly.');
                         }
                         throw new Error('Upload failed');
                     }
