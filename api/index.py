@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, send_from_directory
+from flask import Flask, render_template, request, jsonify
 import json
 import os
 import sys
@@ -9,15 +9,10 @@ sys.path.insert(0, os.path.dirname(__file__))
 from script_connector_bot import ScriptConnectorBot
 import pdfplumber
 
-app = Flask(__name__, template_folder='templates', static_folder='../static')
+app = Flask(__name__, template_folder='templates')
 
 # Initialize the bot
 bot = ScriptConnectorBot()
-
-@app.route('/favicon.ico')
-def favicon():
-    return send_from_directory(os.path.join(app.root_path, '../static'),
-                               'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 @app.route('/')
 def index():
