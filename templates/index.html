@@ -854,8 +854,10 @@
             <div class="api-key-section">
                 <h3>🔑 OpenAI API Key (Optional)</h3>
                 <p>Add your OpenAI API key for AI-powered connector suggestions.</p>
-                <input type="password" id="apiKey" class="api-key-input" placeholder="sk-...">
-                <button onclick="saveApiKey()" class="upload-btn">Save API Key</button>
+                <form id="api-key-form" onsubmit="return saveApiKey()">
+                    <input type="password" id="apiKey" class="api-key-input" placeholder="sk-...">
+                    <button type="submit" class="upload-btn">Save API Key</button>
+                </form>
             </div>
 
             <button onclick="analyzeScript()" class="analyze-btn" id="analyzeBtn">
@@ -951,8 +953,13 @@
         // Save API key
         function saveApiKey() {
             const apiKey = document.getElementById('apiKey').value;
-            localStorage.setItem('openai_api_key', apiKey);
-            showMessage('API key saved!', 'success');
+            if (apiKey) {
+                localStorage.setItem('openai_api_key', apiKey);
+                showMessage('API key saved!', 'success');
+            } else {
+                showMessage('Please enter a valid API key.', 'error');
+            }
+            return false; // Prevent form submission
         }
 
         // Load saved API key
@@ -989,6 +996,12 @@
         function handleFileUpload(event) {
             const file = event.target.files[0];
             if (file && file.type === 'application/pdf') {
+                // Check file size (limit to 4MB for Vercel)
+                if (file.size > 4 * 1024 * 1024) {
+                    showMessage('File too large. Please use a PDF smaller than 4MB.', 'error');
+                    return;
+                }
+                
                 const formData = new FormData();
                 formData.append('file', file);
                 
@@ -998,7 +1011,15 @@
                     method: 'POST',
                     body: formData
                 })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        if (response.status === 413) {
+                            throw new Error('File too large. Please use a smaller PDF.');
+                        }
+                        throw new Error('Upload failed');
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.error) {
                         showMessage(data.error, 'error');
@@ -1008,7 +1029,7 @@
                     }
                 })
                 .catch(error => {
-                    showMessage('Error uploading file: ' + error.message, 'error');
+                    showMessage(error.message || 'Error uploading file: ' + error.message, 'error');
                 })
                 .finally(() => {
                     showLoading(false);
