@@ -1,18 +1,19 @@
 from flask import Flask, render_template, request, jsonify
-import json
 import os
-import sys
-
-# Add current directory to path
-sys.path.insert(0, os.path.dirname(__file__))
-
-from script_connector_bot import ScriptConnectorBot
-import pdfplumber
 
 app = Flask(__name__, template_folder='templates')
 
-# Initialize the bot
-bot = ScriptConnectorBot()
+# Lazy imports to avoid loading issues
+def get_bot():
+    import sys
+    sys.path.insert(0, os.path.dirname(__file__))
+    from script_connector_bot import ScriptConnectorBot
+    return ScriptConnectorBot()
+
+def get_pdfplumber():
+    import pdfplumber
+    return pdfplumber
+
 
 @app.route('/')
 def index():
@@ -32,10 +33,11 @@ def analyze_script():
         
         # Initialize bot with API key from environment
         api_key = os.getenv('OPENAI_API_KEY')
+        ScriptConnectorBot = get_bot().__class__
         if api_key:
             bot_with_ai = ScriptConnectorBot(openai_api_key=api_key)
         else:
-            bot_with_ai = bot
+            bot_with_ai = get_bot()
         
         # Analyze the script with custom intro if provided
         analysis = bot_with_ai.parse_script(script_text, custom_intro=script_intro)
@@ -89,6 +91,7 @@ def upload_pdf():
             return jsonify({'error': 'No file selected'}), 400
         
         # Extract text using pdfplumber
+        pdfplumber = get_pdfplumber()
         script_text = ""
         with pdfplumber.open(file) as pdf:
             for page in pdf.pages:
