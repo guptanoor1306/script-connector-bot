@@ -1274,12 +1274,22 @@
                     
                     // Get suggestions for this connector
                     const connectorSuggestions = data.suggestions.filter(s => 
-                        s.includes(`Line ${connector.line_number}`) || s.includes(`line ${connector.line_number}`)
+                        s.includes(`Line ${connector.line_number}`) || 
+                        s.includes(`line ${connector.line_number}`) ||
+                        (s.includes(`Section ${currentSection.number}`) && s.includes(`${nextSection.number}`))
                     );
                     
-                    suggestionsHtml = connectorSuggestions.map(suggestion => 
-                        `<div class="section-suggestion" onclick="showSuggestionInScript('${suggestion}', 0)">${suggestion}</div>`
-                    ).join('');
+                    if (connectorSuggestions.length > 0) {
+                        suggestionsHtml = `<div><strong>💡 AI Suggestions:</strong></div>` + 
+                            connectorSuggestions.map(suggestion => {
+                                const escapedSuggestion = suggestion.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                                return `<div class="section-suggestion" onclick='showSuggestionInScript(\`${escapedSuggestion}\`, 0)'>${suggestion}</div>`;
+                            }).join('');
+                    } else if (!connector.is_valid) {
+                        suggestionsHtml = '<div class="section-suggestion" style="opacity: 0.6;">Consider making this connector more specific and engaging</div>';
+                    } else {
+                        suggestionsHtml = '<div class="section-suggestion" style="opacity: 0.6; color: green;">✓ This connector looks good!</div>';
+                    }
                     
                 } else {
                     status = '❌ Missing Connector';
@@ -1287,39 +1297,39 @@
                     
                     connectorHtml = '<div class="connector-status">No connector found between these sections</div>';
                     
-                    // Get suggestions for missing connector
-                    const missingSuggestions = data.suggestions.filter(s => 
-                        s.includes(`Section ${currentSection.number} and ${nextSection.number}`) ||
-                        s.includes(`Section ${currentSection.number} and ${nextSection.number}`)
-                    );
+                    // Get suggestions for missing connector - look for section numbers
+                    const missingSuggestions = data.suggestions.filter(s => {
+                        // Match patterns like "Section 1 and 2" or "Section 1 and Section 2"
+                        const pattern1 = `Section ${currentSection.number} and ${nextSection.number}`;
+                        const pattern2 = `Section ${currentSection.number} and Section ${nextSection.number}`;
+                        const pattern3 = `between sections ${currentSection.number} and ${nextSection.number}`;
+                        return s.includes(pattern1) || s.includes(pattern2) || s.includes(pattern3);
+                    });
                     
-                    if (missingSuggestions.length === 0) {
-                        // Generate fallback suggestions if none found
-                        const fallbackSuggestions = [
-                            `Connector between Section ${currentSection.number} and ${nextSection.number}: "But here's what most people don't realize about ${nextSection.title.toLowerCase()}..." (Place after line ${currentSection.end_line})`,
-                            `Connector between Section ${currentSection.number} and ${nextSection.number}: "Now, let's look at what's actually happening with ${nextSection.title.toLowerCase()}..." (Place after line ${currentSection.end_line})`,
-                            `Connector between Section ${currentSection.number} and ${nextSection.number}: "This leads us to the most important part - ${nextSection.title.toLowerCase()}..." (Place after line ${currentSection.end_line})`
-                        ];
-                        suggestionsHtml = fallbackSuggestions.map(suggestion => 
-                            `<div class="section-suggestion" onclick="showSuggestionInScript('${suggestion}', 0)">${suggestion}</div>`
-                        ).join('');
-                    } else {
-                        suggestionsHtml = missingSuggestions.map(suggestion => 
-                            `<div class="section-suggestion" onclick="showSuggestionInScript('${suggestion}', 0)">${suggestion}</div>`
-                        ).join('');
+                    suggestionsHtml = missingSuggestions.map(suggestion => {
+                        // Make suggestions clickable and escape quotes for onclick
+                        const escapedSuggestion = suggestion.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                        return `<div class="section-suggestion" onclick='showSuggestionInScript(\`${escapedSuggestion}\`, 0)'>${suggestion}</div>`;
+                    }).join('');
+                    
+                    // If no suggestions found, show a message
+                    if (!suggestionsHtml) {
+                        suggestionsHtml = '<div class="section-suggestion" style="opacity: 0.6;">AI suggestions will appear here...</div>';
                     }
                 }
                 
                 analysisItem.innerHTML = `
                     <div class="section-analysis-header">
-                        <div class="section-title">Section ${currentSection.number} → Section ${nextSection.number}</div>
+                        <div class="section-title">
+                            <div style="font-weight: bold; margin-bottom: 4px;">Section ${currentSection.number} → Section ${nextSection.number}</div>
+                            <div style="font-size: 0.9em; opacity: 0.8;">${currentSection.title} → ${nextSection.title}</div>
+                        </div>
                         <div class="section-status ${statusClass}">${status}</div>
                     </div>
                     <div class="section-connector-analysis">
                         ${connectorHtml}
                     </div>
                     <div class="section-suggestions">
-                        <strong>Suggestions:</strong>
                         ${suggestionsHtml}
                     </div>
                 `;
