@@ -69,7 +69,12 @@ class ScriptConnectorBot:
         # Initialize OpenAI client if API key is provided
         self.openai_client = None
         if openai_api_key or os.getenv('OPENAI_API_KEY'):
-            self.openai_client = OpenAI(api_key=openai_api_key or os.getenv('OPENAI_API_KEY'))
+            try:
+                self.openai_client = OpenAI(api_key=openai_api_key or os.getenv('OPENAI_API_KEY'))
+            except TypeError as e:
+                # Fallback for compatibility issues
+                print(f"OpenAI client initialization warning: {e}")
+                self.openai_client = None
         
     def parse_script(self, script_text: str, custom_intro: str = None) -> ScriptAnalysis:
         """Parse the script and extract all components step by step"""
