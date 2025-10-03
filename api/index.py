@@ -61,7 +61,9 @@ def analyze_script():
                     'type': connector.type.value,
                     'is_valid': connector.is_valid,
                     'line_number': connector.line_number,
-                    'issues': connector.issues
+                    'issues': connector.issues,
+                    'section_before': connector.section_before,
+                    'section_after': connector.section_after
                 }
                 for connector in analysis.connectors
             ],

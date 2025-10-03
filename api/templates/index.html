@@ -1240,6 +1240,10 @@
             const sectionAnalysis = document.getElementById('sectionAnalysis');
             sectionAnalysis.innerHTML = '';
             
+            console.log('=== displaySectionAnalysis called ===');
+            console.log('Total suggestions:', data.suggestions ? data.suggestions.length : 0);
+            console.log('Suggestions:', data.suggestions);
+            
             // Analyze each section transition
             for (let i = 0; i < data.sections.length - 1; i++) {
                 const currentSection = data.sections[i];
@@ -1305,6 +1309,8 @@
                         const pattern3 = `between sections ${currentSection.number} and ${nextSection.number}`;
                         return s.includes(pattern1) || s.includes(pattern2) || s.includes(pattern3);
                     });
+                    
+                    console.log(`Section ${currentSection.number} → ${nextSection.number}: Found ${missingSuggestions.length} suggestions`);
                     
                     suggestionsHtml = missingSuggestions.map(suggestion => {
                         // Make suggestions clickable and escape quotes for onclick
